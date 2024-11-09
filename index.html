@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Gradient Calculator</title>
+    <style>
+        /* Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+        .calculator {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            max-width: 320px;
+            width: 100%;
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+        }
+        .display {
+            grid-column: 1 / -1;
+            background-color: #333;
+            color: #fff;
+            font-size: 2.5rem;
+            padding: 20px;
+            text-align: right;
+            border-bottom: 2px solid #444;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            overflow-x: auto;
+        }
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background-color: #222;
+        }
+        .button {
+            font-size: 1.5rem;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.3s, transform 0.1s;
+            color: #e0e0e0;
+            background: linear-gradient(145deg, #3a3a3a, #1f1f1f);
+        }
+        .button:hover {
+            background: linear-gradient(145deg, #4a4a4a, #2f2f2f);
+        }
+        .button:active {
+            transform: scale(0.98);
+        }
+        .button--operator {
+            background: linear-gradient(145deg, #ff7043, #e65b2e);
+            color: #fff;
+        }
+        .button--operator:hover {
+            background: linear-gradient(145deg, #ff5722, #d4431b);
+        }
+        .button--equals {
+            background: linear-gradient(145deg, #388e3c, #2f7d32);
+            color: #fff;
+            grid-column: span 2;
+        }
+        .button--equals:hover {
+            background: linear-gradient(145deg, #2e7d32, #27652a);
+        }
+        .button--clear {
+            background: linear-gradient(145deg, #d32f2f, #b71c1c);
+            color: #fff;
+            grid-column: span 2;
+        }
+        .button--clear:hover {
+            background: linear-gradient(145deg, #c62828, #a71a1a);
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator" role="application" aria-label="Calculator">
+        <div class="display" id="display" aria-live="polite">0</div>
+        <div class="buttons">
+            <button class="button button--clear" onclick="clearDisplay()" aria-label="Clear">C</button>
+            <button class="button button--operator" onclick="appendOperator('/')" aria-label="Divide">÷</button>
+            <button class="button button--operator" onclick="appendOperator('*')" aria-label="Multiply">×</button>
+            <button class="button button--operator" onclick="backspace()" aria-label="Backspace">⌫</button>
+
+            <button class="button" onclick="appendNumber(7)">7</button>
+            <button class="button" onclick="appendNumber(8)">8</button>
+            <button class="button" onclick="appendNumber(9)">9</button>
+            <button class="button button--operator" onclick="appendOperator('-')" aria-label="Subtract">−</button>
+
+            <button class="button" onclick="appendNumber(4)">4</button>
+            <button class="button" onclick="appendNumber(5)">5</button>
+            <button class="button" onclick="appendNumber(6)">6</button>
+            <button class="button button--operator" onclick="appendOperator('+')" aria-label="Add">+</button>
+
+            <button class="button" onclick="appendNumber(1)">1</button>
+            <button class="button" onclick="appendNumber(2)">2</button>
+            <button class="button" onclick="appendNumber(3)">3</button>
+            <button class="button button--equals" onclick="calculate()" aria-label="Equals">=</button>
+
+            <button class="button" onclick="appendNumber(0)" aria-label="Zero">0</button>
+            <button class="button" onclick="appendDot()" aria-label="Decimal point">.</button>
+        </div>
+    </div>
+
+    <script>
+        const display = document.getElementById("display");
+        let currentInput = "0";
+        let operator = null;
+        let firstOperand = null;
+        let awaitingSecondOperand = false;
+
+        function updateDisplay() {
+            display.textContent = currentInput;
+        }
+
+        function clearDisplay() {
+            currentInput = "0";
+            operator = null;
+            firstOperand = null;
+            awaitingSecondOperand = false;
+            updateDisplay();
+        }
+
+        function backspace() {
+            if (currentInput.length > 1) {
+                currentInput = currentInput.slice(0, -1);
+            } else {
+                currentInput = "0";
+            }
+            updateDisplay();
+        }
+
+        function appendNumber(number) {
+            if (awaitingSecondOperand) {
+                currentInput = number.toString();
+                awaitingSecondOperand = false;
+            } else {
+                currentInput = currentInput === "0" ? number.toString() : currentInput + number.toString();
+            }
+            updateDisplay();
+        }
+
+        function appendDot() {
+            if (!currentInput.includes(".")) {
+                currentInput += ".";
+            }
+            updateDisplay();
+        }
+
+        function appendOperator(op) {
+            if (operator && awaitingSecondOperand) {
+                operator = op;
+                return;
+            }
+            if (firstOperand === null) {
+                firstOperand = parseFloat(currentInput);
+            } else if (operator) {
+                calculate();
+                firstOperand = parseFloat(currentInput);
+            }
+            operator = op;
+            awaitingSecondOperand = true;
+        }
+
+        function calculate() {
+            if (!operator || awaitingSecondOperand) return;
+            const secondOperand = parseFloat(currentInput);
+            switch (operator) {
+                case "+":
+                    currentInput = (firstOperand + secondOperand).toString();
+                    break;
+                case "-":
+                    currentInput = (firstOperand - secondOperand).toString();
+                    break;
+                case "*":
+                    currentInput = (firstOperand * secondOperand).toString();
+                    break;
+                case "/":
+                    currentInput = secondOperand !== 0 ? (firstOperand / secondOperand).toString() : "Error";
+                    break;
+            }
+            operator = null;
+            firstOperand = null;
+            awaitingSecondOperand = false;
+            updateDisplay();
+        }
+    </script>
+</body>
+</html>
